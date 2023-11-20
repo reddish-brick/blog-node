@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:7.0.3
+    restart: always
+    networks:
+      - MONGO-COMPOSE-NETWORK
+    ports:
+      - 27017:27017
+    command: [--auth]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: blogNode
+      MONGO_USERNAME: DB_username
+      MONGO_PASSWORD: DB_password
+    volumes:
+      - type: volume
+        source: MONGO_DATA
+        target: /data/db
+      - type: volume
+        source: MONGO_CONFIG
+        target: /data/configdb
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express:1.0.0-20
+    restart: always
+    networks:
+      - MONGO-COMPOSE-NETWORK
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      # ME_CONFIG_MONGODB_AUTH_DATABASE: blogNode
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    depends_on:
+      - mongodb
+    ports:
+      - 8081:8081
+
+volumes:
+  MONGO_DATA:
+    name: MONGO_DATA
+  MONGO_CONFIG:
+    name: MONGO_CONFIG
+
+networks:
+  MONGO-COMPOSE-NETWORK:
+    name: MONGO-COMPOSE-NETWORK
+    driver: bridge
